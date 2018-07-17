@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,19 +31,29 @@ public class BackupDialog {
                                           .create();
 
     dialog.setOnShowListener(created -> {
+      CheckBox confirmationCheckBox = dialog.findViewById(R.id.confirmation_check);
       Button button = ((AlertDialog) created).getButton(AlertDialog.BUTTON_POSITIVE);
-      button.setOnClickListener(v -> {
-        CheckBox confirmationCheckBox = dialog.findViewById(R.id.confirmation_check);
-        if (confirmationCheckBox.isChecked()) {
-          TextSecurePreferences.setBackupPassphrase(context, Util.join(password, " "));
-          TextSecurePreferences.setBackupEnabled(context, true);
-          LocalBackupListener.schedule(context);
+      button.setEnabled(false);
 
-          preference.setChecked(true);
-          created.dismiss();
-        } else {
-          Toast.makeText(context, R.string.BackupDialog_please_acknowledge_your_understanding_by_marking_the_confirmation_check_box, Toast.LENGTH_LONG).show();
+      confirmationCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+          if (isChecked) {
+            button.setEnabled(true);
+          } else {
+            button.setEnabled(false);
+          }
         }
+      });
+
+      button.setOnClickListener(v -> {
+        TextSecurePreferences.setBackupPassphrase(context, Util.join(password, " "));
+        TextSecurePreferences.setBackupEnabled(context, true);
+        LocalBackupListener.schedule(context);
+
+        preference.setChecked(true);
+        created.dismiss();
       });
     });
 
